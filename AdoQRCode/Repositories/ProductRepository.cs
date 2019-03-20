@@ -28,20 +28,20 @@ namespace AdoQRCode.Repositories
             message = $"Товар {product.Name} добавлен в базу данных";
         }
 
-        public void Delete(int id, out string message)
+        public void Delete(int productId, out string message)
         {
             using (SqlConnection connection=new SqlConnection(connectionString))
             {
                 connection.Open();
                 string deleteSql = $"DELETE FROM {tableName} WHERE [Id]=@id";
                 SqlCommand command = new SqlCommand(deleteSql, connection);
-                command.Parameters.AddWithValue("@id", id);
+                command.Parameters.AddWithValue("@id", productId);
                 command.ExecuteNonQuery();
             }
-            message = $"Товар №{id} удален из базы данных";
+            message = $"Товар №{productId} удален из базы данных";
         }
 
-        public Product Read(int id)
+        public Product Read(int productId)
         {
             Product product = null;
 
@@ -50,7 +50,7 @@ namespace AdoQRCode.Repositories
                 connection.Open();
                 string selectSql = $"SELECT * FROM {tableName} WHERE [Id]=@id";
                 SqlCommand command = new SqlCommand(selectSql, connection);
-                command.Parameters.AddWithValue("@id", id);
+                command.Parameters.AddWithValue("@id", productId);
                 SqlDataReader reader = command.ExecuteReader();
                 if (reader.HasRows)
                 {
@@ -97,7 +97,7 @@ namespace AdoQRCode.Repositories
             }
         }
 
-        public void Update(int id, Product updated, out string message)
+        public void Update(int productId, Product updated, out string message)
         {
             using (SqlConnection connection=new SqlConnection(connectionString))
             {
@@ -106,10 +106,10 @@ namespace AdoQRCode.Repositories
                 SqlCommand command = new SqlCommand(updateSql, connection);
                 command.Parameters.AddWithValue("@productName", updated.Name);
                 command.Parameters.AddWithValue("@productPriceUsd", updated.PriceUsd);
-                command.Parameters.AddWithValue("@id", id);
+                command.Parameters.AddWithValue("@id", productId);
                 command.ExecuteNonQuery();
             }
-            message = $"Параметры товара №{id} в базе данных обновлены";
+            message = $"Параметры товара №{productId} в базе данных обновлены";
         }
     }
 }
