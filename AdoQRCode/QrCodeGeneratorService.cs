@@ -49,7 +49,7 @@ namespace AdoQRCode
             }
         }
 
-        public byte[] GetQrCodeShippingInfo(Purchase purchase)
+        public byte[] GetQrCodeShippingInfo(Purchase purchase, out string path)
         {
             byte[] tmp = null;
             Random rnd = new Random();
@@ -66,7 +66,8 @@ namespace AdoQRCode
 
             string pathToSave = ConfigurationManager.AppSettings["qrCodesOutputDirectory"];
             string fileName = $"{"shippingInfo_" + purchase.PurchaseGuid.ToString()}.png";
-            qrCodeImage.Save(Path.Combine(pathToSave, fileName));            
+            path = Path.Combine(pathToSave, fileName);
+            qrCodeImage.Save(path);
 
             using (MemoryStream ms = new MemoryStream())
             {

@@ -34,7 +34,7 @@ namespace AdoQRCode.Repositories
                 command.Parameters.Add(new SqlParameter("@shippingQR", SqlDbType.VarBinary, 1)).Value = purchase.ShippingQr;                
                 command.ExecuteNonQuery();
             }
-            message = $"Покупка №{purchase.PurchaseGuid} успешно добавлена в базу данных";
+            message = $"Данные о покупке №{purchase.PurchaseGuid}";
         }
 
         public void Delete(int purchaseId, out string message)
