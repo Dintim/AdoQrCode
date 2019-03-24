@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
@@ -16,18 +17,21 @@ namespace AdoQRCode.Repositories
 
         public void Add(Purchase purchase, out string message)
         {
-            using (SqlConnection connection=new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string insertSql = $"INSERT INTO {tableName} ([purchaseGUID],[purchaseDate],[productId],[customerName],[purchaseQR],[shippingQR])" +
-                    $"VALUES (@purchaseGUID, @purchaseDate, @productId, @customerName, @purchaseQR, @shippingQR)";
+                string insertSql = $"INSERT INTO {tableName} ([purchaseGUID],[purchaseDate],[productId],[customerName]," +
+                    $"[exchangeRate],[priceKZT],[purchaseQR],[shippingQR])" +
+                    $"VALUES (@purchaseGUID, @purchaseDate, @productId, @customerName, @exchangeRate, @priceKZT, @purchaseQR, @shippingQR)";
                 SqlCommand command = new SqlCommand(insertSql, connection);
-                command.Parameters.AddWithValue("@purchaseGUID", purchase.PurchaseGuid);
-                command.Parameters.AddWithValue("@purchaseDate", purchase.PurchaseDate);
-                command.Parameters.AddWithValue("@productId", purchase.ProductId);
-                command.Parameters.AddWithValue("@customerName", purchase.CustomerName);
-                command.Parameters.AddWithValue("@purchaseQR", purchase.PurchaseQr);
-                command.Parameters.AddWithValue("@shippingQR", purchase.ShippingQr);
+                command.Parameters.Add(new SqlParameter("@purchaseGUID", SqlDbType.NVarChar, 255)).Value = purchase.PurchaseGuid.ToString();
+                command.Parameters.Add(new SqlParameter("@purchaseDate", SqlDbType.Date)).Value = purchase.PurchaseDate;
+                command.Parameters.Add(new SqlParameter("@productId", SqlDbType.Int, 16)).Value = purchase.ProductId;
+                command.Parameters.Add(new SqlParameter("@customerName", SqlDbType.NVarChar, 300)).Value = purchase.CustomerName;
+                command.Parameters.Add(new SqlParameter("@exchangeRate", SqlDbType.Float)).Value = purchase.ExchangeRate;
+                command.Parameters.Add(new SqlParameter("@priceKZT", SqlDbType.Float)).Value = purchase.PriceKZT;
+                command.Parameters.Add(new SqlParameter("@purchaseQR", SqlDbType.VarBinary, 1)).Value = purchase.PurchaseQr;
+                command.Parameters.Add(new SqlParameter("@shippingQR", SqlDbType.VarBinary, 1)).Value = purchase.ShippingQr;                
                 command.ExecuteNonQuery();
             }
             message = $"Покупка №{purchase.PurchaseGuid} успешно добавлена в базу данных";
@@ -40,23 +44,93 @@ namespace AdoQRCode.Repositories
                 connection.Open();
                 string deleteSql = $"DELETE FROM {tableName} WHERE [Id]=@id";
                 SqlCommand command = new SqlCommand(deleteSql, connection);
-                command.Parameters.AddWithValue("@id", purchaseId);
+                command.Parameters.Add(new SqlParameter("@id", SqlDbType.Int, 16)).Value= purchaseId;
                 command.ExecuteNonQuery();
             }
             message = $"Покупка №{purchaseId} успешно удалена из базы данных";
         }
 
-        public Purchase Read(int id)
+        public Purchase Read(int purchaseId)
         {
-            throw new NotImplementedException();
+            Purchase purchase = null;
+
+            using (SqlConnection connection=new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string selectSql = $"SELECT * FROM {tableName} WHERE [Id]=@id";
+                SqlCommand command = new SqlCommand(selectSql, connection);
+                command.Parameters.Add(new SqlParameter("@id", SqlDbType.Int, 16)).Value = purchaseId;
+                SqlDataReader reader = command.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    reader.Read();
+                    object pId = reader.GetValue(0);
+                    object pGuid = reader.GetValue(1);
+                    object pDate = reader.GetValue(2);
+                    object pProdId = reader.GetValue(3);
+                    object pCustName = reader.GetValue(4);
+                    object pExRate = reader.GetValue(5);
+                    object pPrice = reader.GetValue(6);
+                    object pPurQr = reader.GetValue(7);
+                    object pShipQr = reader.GetValue(8);
+
+                    purchase = new Purchase
+                    {
+                        Id = Int32.Parse(pId.ToString()),
+                        PurchaseGuid = new Guid(pGuid.ToString()),
+                        PurchaseDate = Convert.ToDateTime(pDate.ToString()),
+                        ProductId = Int32.Parse(pProdId.ToString()),
+                        CustomerName = pCustName.ToString(),
+                        ExchangeRate = double.Parse(pExRate.ToString().Replace('.', ',')),
+                        PriceKZT = double.Parse(pPrice.ToString().Replace('.', ',')),
+                        PurchaseQr = Encoding.ASCII.GetBytes(pPurQr.ToString()),
+                        ShippingQr = Encoding.ASCII.GetBytes(pShipQr.ToString())
+                    };
+                }
+            }
+            return purchase;
         }
 
         public IEnumerable<Purchase> ReadAll()
         {
-            throw new NotImplementedException();
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string selectSql = $"SELECT * FROM {tableName}";
+                SqlCommand command = new SqlCommand(selectSql, connection);                
+                SqlDataReader reader = command.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        object pId = reader.GetValue(0);
+                        object pGuid = reader.GetValue(1);
+                        object pDate = reader.GetValue(2);
+                        object pProdId = reader.GetValue(3);
+                        object pCustName = reader.GetValue(4);
+                        object pExRate = reader.GetValue(5);
+                        object pPrice = reader.GetValue(6);
+                        object pPurQr = reader.GetValue(7);
+                        object pShipQr = reader.GetValue(8);
+
+                        yield return new Purchase
+                        {
+                            Id = Int32.Parse(pId.ToString()),
+                            PurchaseGuid = new Guid(pGuid.ToString()),
+                            PurchaseDate = Convert.ToDateTime(pDate.ToString()),
+                            ProductId = Int32.Parse(pProdId.ToString()),
+                            CustomerName = pCustName.ToString(),
+                            ExchangeRate = double.Parse(pExRate.ToString().Replace('.', ',')),
+                            PriceKZT = double.Parse(pPrice.ToString().Replace('.', ',')),
+                            PurchaseQr = Encoding.ASCII.GetBytes(pPurQr.ToString()),
+                            ShippingQr = Encoding.ASCII.GetBytes(pShipQr.ToString())
+                        };
+                    }
+                }
+            }
         }
 
-        public void Update(int id, Purchase updated, out string message)
+        public void Update(int purchaseId, Purchase updated, out string message)
         {
             throw new NotImplementedException();
         }
