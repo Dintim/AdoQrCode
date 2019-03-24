@@ -9,6 +9,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -90,23 +92,37 @@ namespace AdoQRCode
             PurchaseRepository pur = new PurchaseRepository();
             QrCodeGeneratorService qr = new QrCodeGeneratorService();
 
-            //Purchase purchase = new Purchase { PurchaseGuid = Guid.NewGuid(), PurchaseDate = DateTime.Now, ProductId = 2, CustomerName = "John Jones" };
-            //purchase.PriceKZT = rep.Read(purchase.ProductId).PriceUsd * purchase.ExchangeRate;
-            //purchase.PurchaseQr = qr.GetQrCodePurchaseInfo(purchase);
-            //purchase.ShippingQr = qr.GetQrCodeShippingInfo(purchase);
+            string path = "";
+            Purchase purchase = new Purchase { PurchaseGuid = Guid.NewGuid(), PurchaseDate = DateTime.Now, ProductId = 3, CustomerName = "Иван Иванов" };
+            purchase.PriceKZT = rep.Read(purchase.ProductId).PriceUsd * purchase.ExchangeRate;
+            purchase.PurchaseQr = qr.GetQrCodePurchaseInfo(purchase, out path);
+            purchase.ShippingQr = qr.GetQrCodeShippingInfo(purchase);
 
-            //string message = "";
-            //pur.Add(purchase, out message);
+            string message = "";
+            pur.Add(purchase, out message);
             //Console.WriteLine(message);
+            //Console.WriteLine(path);
 
-            IEnumerable<Purchase> purchases = pur.ReadAll();
-            if (purchases != null)
-            {
-                foreach (Purchase item in purchases)
-                {
-                    Console.WriteLine(item.PriceKZT);
-                }
-            }
+            MailAddress from = new MailAddress("muk_dinara@mail.ru", "Dinara");
+            MailAddress to = new MailAddress("muk_dinara@mail.ru");
+            MailMessage mess = new MailMessage(from, to);
+            mess.Subject = message;
+            mess.Attachments.Add(new Attachment(path));
+
+            SmtpClient smtp = new SmtpClient("smtp.mail.ru", 587);
+            smtp.Credentials = new NetworkCredential("muk_dinara@mail.ru", "Nbveh123$");
+            smtp.EnableSsl = true;
+            smtp.Send(mess);
+            Console.WriteLine("sended");
+
+            //IEnumerable<Purchase> purchases = pur.ReadAll();
+            //if (purchases != null)
+            //{
+            //    foreach (Purchase item in purchases)
+            //    {
+            //        Console.WriteLine(item.PriceKZT);
+            //    }
+            //}
 
 
 

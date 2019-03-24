@@ -23,7 +23,7 @@ namespace AdoQRCode
             _productRepository = new ProductRepository();
         }
 
-        public byte[] GetQrCodePurchaseInfo(Purchase purchase)
+        public byte[] GetQrCodePurchaseInfo(Purchase purchase, out string path)
         {
             byte[] tmp = null;
 
@@ -38,7 +38,8 @@ namespace AdoQRCode
 
             string pathToSave = ConfigurationManager.AppSettings["qrCodesOutputDirectory"];
             string fileName = $"{"purchaseInfo_"+purchase.PurchaseGuid.ToString()}.png";
-            qrCodeImage.Save(Path.Combine(pathToSave, fileName));
+            path = Path.Combine(pathToSave, fileName);
+            qrCodeImage.Save(path);
 
             using (MemoryStream ms=new MemoryStream())
             {
