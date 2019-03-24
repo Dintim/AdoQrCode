@@ -132,7 +132,24 @@ namespace AdoQRCode.Repositories
 
         public void Update(int purchaseId, Purchase updated, out string message)
         {
-            throw new NotImplementedException();
+            using (SqlConnection connection=new SqlConnection(connectionString))
+            {
+                string updateSql = $"UPDATE {tableName} SET [purchaseGUID]=@purchaseGUID,[purchaseDate]=@purchaseDate,[productId]=@productId," +
+                    $"[customerName]=@customerName,[exchangeRate]=@exchangeRate,[priceKZT]=@priceKZT," +
+                    $"[purchaseQR]=@purchaseQR,[shippingQR]=@shippingQR WHERE [Id]=@id";
+                SqlCommand command = new SqlCommand(updateSql, connection);
+                command.Parameters.Add(new SqlParameter("@purchaseGUID", SqlDbType.NVarChar, 255)).Value = updated.PurchaseGuid.ToString();
+                command.Parameters.Add(new SqlParameter("@purchaseDate", SqlDbType.Date)).Value = updated.PurchaseDate;
+                command.Parameters.Add(new SqlParameter("@productId", SqlDbType.Int, 16)).Value = updated.ProductId;
+                command.Parameters.Add(new SqlParameter("@customerName", SqlDbType.NVarChar, 300)).Value = updated.CustomerName;
+                command.Parameters.Add(new SqlParameter("@exchangeRate", SqlDbType.Float)).Value = updated.ExchangeRate;
+                command.Parameters.Add(new SqlParameter("@priceKZT", SqlDbType.Float)).Value = updated.PriceKZT;
+                command.Parameters.Add(new SqlParameter("@purchaseQR", SqlDbType.VarBinary, 1)).Value = updated.PurchaseQr;
+                command.Parameters.Add(new SqlParameter("@shippingQR", SqlDbType.VarBinary, 1)).Value = updated.ShippingQr;
+                command.Parameters.Add(new SqlParameter("@id", SqlDbType.Int, 16)).Value = purchaseId;
+                command.ExecuteNonQuery();
+            }
+            message= $"Параметры покупки №{purchaseId} в базе данных обновлены";
         }
     }
 }
