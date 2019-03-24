@@ -23,12 +23,12 @@ namespace AdoQRCode
             {
                 Console.Clear();
                 Console.WriteLine("=================================");
-                Console.WriteLine("ID\tНазвание\t\tЦена(в USD)");
+                Console.WriteLine("ID\tНазвание \\ Цена(в USD)");
                 Console.WriteLine("---------------------------------");
                 List<Product> products = productDb.ReadAll().ToList();
                 foreach (Product item in products)
                 {
-                    Console.WriteLine($"{item.Id}\t{item.Name}\t{item.PriceUsd}");
+                    Console.WriteLine($"{item.Id}\t{item.Name} \\ ${item.PriceUsd}");
                 }
                 Console.WriteLine("---------------------------------\n");
                 Console.Write("Выберите ID товара (0-выход): ");
